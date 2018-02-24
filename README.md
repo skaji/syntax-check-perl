@@ -1,4 +1,4 @@
-# syntax checker for perl
+# syntax checker for perl [![Build Status](https://travis-ci.org/skaji/syntax-check-perl.svg?branch=master)](https://travis-ci.org/skaji/syntax-check-perl)
 
 ## Usage
 
