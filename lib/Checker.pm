@@ -13,13 +13,7 @@ sub _slurp {
 sub new {
     my $class = shift;
     my @impl = map "Checker::$_", qw(Compile Regexp Misc);
-    my $formatter = sub {
-        my @err = @_;
-        for my $err (@err) {
-            warn "$err->{message} at dummy line $err->{line}\n";
-        }
-    };
-    bless { impl => \@impl, formatter => $formatter }, $class;
+    bless { impl => \@impl, format => "perl", }, $class;
 }
 
 sub _show_usage {
@@ -43,16 +37,9 @@ sub parse_options {
     Getopt::Long::Configure(qw(no_auto_abbrev no_ignore_case bundling));
     local @ARGV = @argv;
     Getopt::Long::GetOptions(
-        "f|format=s" => \(my $format = ""),
+        "f|format=s" => \$self->{format},
         "h|help"     => sub { $self->_show_usage },
     );
-    if ($format eq "json") {
-        require JSON::PP;
-        $self->{formatter} = sub {
-            my @err = @_;
-            warn JSON::PP->new->canonical(1)->pretty(1)->encode(\@err);
-        };
-    }
     @ARGV;
 }
 
@@ -60,15 +47,24 @@ sub run {
     my $self = shift;
     my ($filename, $tempfile) = (grep /^-/, @_) ? $self->parse_options(@_) : @_;
     $self->_show_usage unless $filename;
+    $tempfile ||= $filename;
     my @err = $self->_run($filename, $tempfile);
-    $self->{formatter}->(@err);
+    my $formatter;
+    if ($self->{format} eq "json") {
+        require Checker::Formatter::JSON;
+        $formatter = Checker::Formatter::JSON->new;
+    } else {
+        require Checker::Formatter::Perl;
+        $formatter = Checker::Formatter::Perl->new($tempfile);
+    }
+    my $str = $formatter->format(@err);
+    print STDERR $str if length $str;
     return @err ? 1 : 0;
 }
 
 sub _run {
     my ($self, $filename, $tempfile) = @_;
     return if $filename =~ /\b(?:cpanfile|alienfile)$/;
-    $tempfile ||= $filename;
     my $lines = _slurp $tempfile;
 
     my @err;
