@@ -14,7 +14,7 @@ $ syntax-check -f json script.pl
 
 ## Integrate with vim plug and ale
 
-Here is how to integrate with https://github.com/junegunn/vim-plug and https://github.com/w0rp/ale
+Here is how to integrate with [vim-plug](https://github.com/junegunn/vim-plug) and [ale](https://github.com/w0rp/ale).
 
 ```vim
 call plug#begin('~/.vim/plugged')
