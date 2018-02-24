@@ -24,4 +24,8 @@ is_deeply $err[0], { message => "spell check 'pakcage'", line => 6 }; # no synta
 @err = $checker->_run("t/file/skip.pl", "t/file/skip.pl");
 is @err, 0;
 
+@err = $checker->_run("t/file/invalid.pl", "t/file/invalid.pl");
+is @err, 1;
+is_deeply $err[0], { message => 'syntax error', line => 4 };
+
 done_testing;

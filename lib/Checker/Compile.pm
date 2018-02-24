@@ -32,8 +32,8 @@ sub check {
     my @err;
     while (my $line = <$fh>) {
         next if grep { $line =~ $_ } @skip;
-        if ($line =~ s/ at \Q$tempfile\E line (\d+)\.\n//) {
-            push @err, { message => $line, line => 0+$1 };
+        if ($line =~ s/^([^\n]+?) at (?:.+?) line (\d+)//) {
+            push @err, { message => $1, line => 0+$2 };
         }
     }
     close $fh;
