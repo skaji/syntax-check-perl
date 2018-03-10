@@ -1,7 +1,5 @@
 language: perl
 sudo: false
-install:
-  - "true"
 script:
   - prove -l t
 
