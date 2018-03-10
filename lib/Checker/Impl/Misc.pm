@@ -1,4 +1,4 @@
-package Checker::Misc;
+package Checker::Impl::Misc;
 use strict;
 use warnings;
 

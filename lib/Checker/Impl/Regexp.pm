@@ -1,4 +1,4 @@
-package Checker::Regexp;
+package Checker::Impl::Regexp;
 use strict;
 use warnings;
 

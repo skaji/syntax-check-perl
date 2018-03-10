@@ -1,4 +1,4 @@
-package Checker::Compile;
+package Checker::Impl::Compile;
 use strict;
 use warnings;
 use Config;

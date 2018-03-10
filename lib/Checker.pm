@@ -1,6 +1,8 @@
 package Checker;
 use strict;
 use warnings;
+use File::Basename ();
+use File::Spec;
 
 sub _slurp {
     my $file = shift;
@@ -12,8 +14,23 @@ sub _slurp {
 
 sub new {
     my $class = shift;
-    my @impl = map "Checker::$_", qw(Compile Regexp Misc);
+    my @impl = $class->_load_impl;
     bless { impl => \@impl, format => "perl", }, $class;
+}
+
+sub _load_impl {
+    my $class = shift;
+    my $dir = File::Spec->catdir(File::Basename::dirname(__FILE__), "Checker", "Impl");
+    opendir my $dh, $dir or die "$dir: $!";
+    my @impl = map  { "Checker::Impl::$_" }
+               grep { s/\.pm$// }
+               grep { -f File::Spec->catfile($dir, $_) }
+               readdir $dh;
+    closedir $dh;
+    for my $impl (@impl) {
+        eval "require $impl; 1" or die $@;
+    }
+    @impl;
 }
 
 sub _show_usage {
@@ -69,7 +86,6 @@ sub _run {
 
     my @err;
     for my $klass (@{$self->{impl}}) {
-        eval "require $klass; 1" or die $@;
         my $impl = $klass->new;
         my @e = $impl->check($filename, $tempfile, $lines);
         push @err, @e if @e and defined $e[0];
