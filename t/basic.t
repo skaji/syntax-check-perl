@@ -33,7 +33,7 @@ subtest basic => sub {
 
 subtest output => sub {
     my $checker = Checker->new;
-    my ($merged) = capture_merged { $checker->run("filename", "t/file/alienfile") };
+    my ($merged) = capture_merged { $checker->run("t/file/alienfile", "t/file/alienfile") };
     is $merged, "t/file/alienfile syntax OK\n";
 
     ($merged) = capture_merged { $checker->run("--format", "json", "t/file/use_fail.pl") };
