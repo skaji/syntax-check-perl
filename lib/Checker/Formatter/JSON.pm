@@ -5,7 +5,7 @@ use JSON::PP ();
 
 sub new {
     my ($class, $file) = @_;
-    my $json = JSON::PP->new->canonical(1)->pretty(1);
+    my $json = JSON::PP->new->canonical(1)->pretty(1)->indent_length(2)->space_before(0);
     bless { json => $json }, $class;
 }
 
