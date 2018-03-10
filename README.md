@@ -23,7 +23,7 @@ Plug 'skaji/syntax-check-perl'
 call plug#end()
 
 let g:ale_linters = { 'perl': ['perl'] }
-let g:ale_perl_perl_executable = g:plug_home . '/syntax-check-perl/syntax-check.pl'
+let g:ale_perl_perl_executable = g:plug_home . '/syntax-check-perl/syntax-check'
 let g:ale_perl_perl_options = '%s'
 ```
 
