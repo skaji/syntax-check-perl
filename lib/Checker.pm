@@ -58,7 +58,7 @@ sub run {
         $formatter = Checker::Formatter::Perl->new($tempfile);
     }
     my $str = $formatter->format(@err);
-    print STDERR $str if length $str;
+    print STDERR length $str ? $str : "$tempfile syntax OK\n";
     return @err ? 1 : 0;
 }
 
