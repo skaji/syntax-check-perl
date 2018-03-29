@@ -36,7 +36,9 @@ sub check {
             my $message_ = $1;
             my $filename_ = $2;
             my $line_ = $3;
-            push @err, { message => $message_, line => 0+$line_, from => (ref $self) } if $filename =~ /\Q$basename$/;
+            if ($filename_ =~ /\Q$basename\E$/o) {
+                push @err, { message => $message_, line => 0+$line_, from => (ref $self) };
+            }
         }
     }
     close $fh;
