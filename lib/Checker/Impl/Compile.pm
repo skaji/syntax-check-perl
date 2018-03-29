@@ -9,7 +9,6 @@ sub new {
     bless {}, $class;
 }
 
-
 sub check {
     my ($self, $filename, $tempfile, $lines) = @_;
 
@@ -28,16 +27,12 @@ sub check {
         exec @cmd;
         exit 255;
     }
-    my $basename = File::Basename::basename($filename);
     my @err;
     while (my $line = <$fh>) {
         next if grep { $line =~ $_ } @skip;
-        if ($line =~ s/^([^\n]+?) at (.+?) line (\d+)//) {
-            my $message_ = $1;
-            my $filename_ = $2;
-            my $line_ = $3;
-            if ($filename_ =~ /\Q$basename\E$/) {
-                push @err, { message => $message_, line => 0+$line_, from => (ref $self) };
+        if (my ($m, $f, $l) = $line =~ /^([^\n]+?) at (.+?) line (\d+)/) {
+            if ($f eq $tempfile) {
+                push @err, { message => $m, line => 0+$l, from => (ref $self) };
             }
         }
     }
