@@ -15,7 +15,7 @@ sub check {
         my $line = $lines->[$i];
         next if $line =~ /no syntax check$/;
         if (my $message = $self->_check($line)) {
-            push @err, { message => $message, line => $i+1 };
+            push @err, { message => $message, line => $i+1, from => (ref $self) };
         }
     }
     return @err;

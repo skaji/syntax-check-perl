@@ -21,7 +21,7 @@ sub _package_name {
     my @part = split /::/, $package;
     my $expect = (join "/", @part) . ".pm";
     if ($filename !~ /\Q$expect\E$/) {
-        return { message => "package name is incorrect", line => 1 };
+        return { message => "package name is incorrect", line => 1, from => (ref $self) };
     }
     return;
 }

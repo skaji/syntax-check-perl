@@ -14,7 +14,6 @@ sub check {
     my ($self, $filename, $tempfile, $lines) = @_;
 
     my @skip = (
-        qr/^BEGIN failed--compilation aborted/,
         qr/^Subroutine \S+ redefined/,
         qr/^Name "\S+" used only once/,
         $filename =~ /\.psgi$/
@@ -32,8 +31,11 @@ sub check {
     my @err;
     while (my $line = <$fh>) {
         next if grep { $line =~ $_ } @skip;
-        if ($line =~ s/^([^\n]+?) at (?:.+?) line (\d+)//) {
-            push @err, { message => $1, line => 0+$2 };
+        if ($line =~ s/^([^\n]+?) at (.+?) line (\d+)//) {
+            my $message_ = $1;
+            my $filename_ = $2;
+            my $line_ = $3;
+            push @err, { message => $message_, line => 0+$line_, from => (ref $self) } if $filename eq $filename_;
         }
     }
     close $fh;
