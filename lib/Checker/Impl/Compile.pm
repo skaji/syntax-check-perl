@@ -3,22 +3,15 @@ use strict;
 use warnings;
 use Config;
 use Cwd qw(abs_path getcwd);
+use Checker::Home;
 
 sub new {
-    my $class = shift;
-    bless {}, $class;
+    my ($class, %args) = @_;
+    bless {%args}, $class;
 }
 
 sub check {
     my ($self, $filename, $tempfile, $lines) = @_;
-
-    my @skip = (
-        qr/^Subroutine \S+ redefined/,
-        qr/^Name "\S+" used only once/,
-        $filename =~ /\.psgi$/
-            ? (qr/^Useless use of single ref constructor in void context/)
-            : (),
-    );
 
     my @cmd = (@{$self->_cmd}, $tempfile);
     my $pid = open my $fh, "-|";
@@ -29,10 +22,11 @@ sub check {
     }
     my @err;
     while (my $line = <$fh>) {
-        next if grep { $line =~ $_ } @skip;
+        my $type = $line =~ s/^=MarkWarnings=// ? 'WARN' : 'ERROR'; # must s/// before checking skips
+        next if grep { $line =~ $_ } @{ $self->{skip} || [] };
         if (my ($m, $f, $l) = $line =~ /^([^\n]+?) at (.+?) line (\d+)/) {
             if ($f eq $tempfile) {
-                push @err, { message => $m, line => 0+$l, from => (ref $self) };
+                push @err, { type => $type, message => $m, line => 0+$l, from => (ref $self) };
             }
         }
     }
@@ -45,21 +39,24 @@ sub _cmd {
     my $inc = $self->_inc;
     my $has_indirect = eval { local @INC = (@$inc, @INC); require indirect };
 
+
     my @cmd = (
         $^X,
         (map "-I$_", @$inc),
+        "-MMarkWarnings",
         $has_indirect ? "-M-indirect=fatal" : (),
         "-Mwarnings",
         "-c",
     );
+
     \@cmd;
 }
 
 sub _inc {
     my $self = shift;
+    my @inc = (Checker::Home->get . "/extlib");
     my $version = $Config{version};
     my $back = getcwd;
-    my @inc;
     for (1..10) {
         my $cwd = getcwd;
         last if $cwd eq "/";

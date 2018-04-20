@@ -3,8 +3,8 @@ use strict;
 use warnings;
 
 sub new {
-    my $class = shift;
-    bless {}, $class;
+    my ($class, %args) = @_;
+    bless {%args}, $class;
 }
 
 sub check {
@@ -13,9 +13,9 @@ sub check {
     my @err;
     for my $i (0 .. $#{$lines}) {
         my $line = $lines->[$i];
-        next if $line =~ /no syntax check$/;
+        next if $line =~ /no syntax check$/i;
         if (my $message = $self->_check($line)) {
-            push @err, { message => $message, line => $i+1, from => (ref $self) };
+            push @err, { type => 'ERROR', message => $message, line => $i+1, from => (ref $self) };
         }
     }
     return @err;
@@ -31,6 +31,13 @@ sub _check {
     } elsif ($line =~ /pakcage/) { # no syntax check
         return "spell check 'pakcage'"; # no syntax check
     }
+
+    for my $custom (@{ $self->{check} || [] }) {
+        if ($line =~ $custom) {
+            return "bad line";
+        }
+    }
+
     return;
 }
 

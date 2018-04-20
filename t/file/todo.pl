@@ -2,9 +2,6 @@
 use strict;
 use warnings;
 
-my $x = $FOO::bar;
-
-sub foo {
-}
-sub foo {
+# TODO
+sub hoge {
 }
