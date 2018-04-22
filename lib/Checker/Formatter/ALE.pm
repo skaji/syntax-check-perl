@@ -1,4 +1,4 @@
-package Checker::Formatter::Perl;
+package Checker::Formatter::ALE;
 use strict;
 use warnings;
 
@@ -7,12 +7,15 @@ sub new {
     bless { file => $file }, $class;
 }
 
+my $ALE_WARN = '=MarkWarnings=';
+
 sub format {
     my ($self, @err) = @_;
 
     my $str = "";
     for my $err (@err) {
-        $str .= "$err->{message} at $self->{file} line $err->{line}.\n";
+        my $prefix = $err->{type} eq 'WARN' ? $ALE_WARN : '';
+        $str .= "$prefix$err->{message} at $self->{file} line $err->{line}.\n";
     }
     $str;
 }
