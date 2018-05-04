@@ -12,7 +12,7 @@ Plug 'w0rp/ale'
 Plug 'skaji/syntax-check-perl'
 call plug#end()
 
-let g:ale_linters = { 'perl': ['syntax_check'] }
+let g:ale_linters = { 'perl': ['syntax-check'] }
 ```
 
 ## Configuration
