@@ -18,7 +18,7 @@ let g:ale_linters = { 'perl': ['syntax-check'] }
 ## Configuration
 
 If you write Perl a lot, then I assume you have your own favorite for how to check Perl code.
-You can set config file for `syntax_check`:
+You can set config file for `syntax-check`:
 
 ```vim
 let g:ale_perl_syntax_check_config = expand('~/.vim/your-config.pl')
