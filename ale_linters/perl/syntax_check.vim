@@ -11,9 +11,14 @@ function! ale_linters#perl#syntax_check#GetConfig(buffer) abort
 endfunction
 
 function! ale_linters#perl#syntax_check#GetCommand(buffer) abort
-    return g:plug_home . '/syntax-check-perl/syntax-check'
-    \    . ' --config ' . ale#Escape(ale_linters#perl#syntax_check#GetConfig(a:buffer))
-    \    . ' %s %t'
+    let l:config = ale_linters#perl#syntax_check#GetConfig(a:buffer)
+    if filereadable(l:config)
+        return g:plug_home . '/syntax-check-perl/syntax-check'
+        \    . ' --config ' . ale#Escape(l:config)
+        \    . ' %s %t'
+    else
+        echo "[ERROR] ale plugin syntax-check-perl: Couldn't read config file " . l:config
+    endif
 endfunction
 
 function! ale_linters#perl#syntax_check#Handle(buffer, lines) abort
