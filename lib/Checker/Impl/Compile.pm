@@ -37,17 +37,24 @@ sub check {
 sub _cmd {
     my $self = shift;
     my $inc = $self->_inc;
-    my $has_indirect = eval { local @INC = (@$inc, @INC); require indirect };
-
+    my @use_module;
+    if (my @module = @{$self->{use_module} || []}) {
+        local @INC = (@$inc, @INC);
+        for my $module (@module) {
+            my ($name, $use) = ref $module ? @$module : ($module, "-M$module");
+            push @use_module, $use if eval "require $name"
+        }
+    }
 
     my @cmd = (
         $^X,
         (map "-I$_", @$inc),
         "-MMarkWarnings",
-        $has_indirect ? "-M-indirect=fatal" : (),
+        @use_module,
         "-Mwarnings",
         "-c",
     );
+    warn "@cmd";
 
     \@cmd;
 }

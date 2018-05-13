@@ -23,21 +23,11 @@ sub check {
 
 sub _check {
     my ($self, $line) = @_;
-    if ($line =~ /^ \s* my \s* \( (.*?) \) \s* = \s* shift /x) {
-        my $args = $1;
-        if ($args =~ /,/) {
-            return "shift() in list context";
-        }
-    } elsif ($line =~ /pakcage/) { # no syntax check
-        return "spell check 'pakcage'"; # no syntax check
-    }
-
     for my $custom (@{ $self->{check} || [] }) {
         if ($line =~ $custom) {
             return "bad line";
         }
     }
-
     return;
 }
 

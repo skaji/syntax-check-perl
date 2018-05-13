@@ -1,6 +1,7 @@
 package Checker;
 use strict;
 use warnings;
+use Cwd ();
 use File::Basename ();
 use File::Spec;
 use Getopt::Long qw(:config no_auto_abbrev no_ignore_case bundling);
@@ -49,6 +50,9 @@ sub _load_impl {
 
 sub _load_config {
     my ($self, $filename) = @_;
+    if (!File::Spec->file_name_is_absolute($self->{config_file})) {
+        $self->{config_file} = File::Spec->catfile(Cwd::getcwd(), $self->{config_file});
+    }
     local $ENV{PERL_SYNTAX_CHECK_FILENAME} = $filename;
     my $config = do $self->{config_file};
     die "$self->{config_file}: ", $@ || $! unless $config;
