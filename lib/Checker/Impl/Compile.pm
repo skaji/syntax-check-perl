@@ -54,7 +54,6 @@ sub _cmd {
         "-Mwarnings",
         "-c",
     );
-    warn "@cmd";
 
     \@cmd;
 }
