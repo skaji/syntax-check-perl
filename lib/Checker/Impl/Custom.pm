@@ -13,7 +13,7 @@ sub check {
     for my $i (0 .. $#{$lines}) {
         my $line = $lines->[$i];
         next if $line =~ /no syntax check$/i;
-        if (my $err = $self->_check($line, $filename)) {
+        if (my $err = $self->_check($line, $filename, $lines)) {
             push @err, {
                 type => 'ERROR',
                 message => 'bad line',
@@ -27,9 +27,9 @@ sub check {
 }
 
 sub _check {
-    my ($self, $line, $filename) = @_;
+    my ($self, $line, $filename, $lines) = @_;
     for my $check (@{ $self->{check} || []}) {
-        my $err = eval { $check->($line, $filename) };
+        my $err = eval { $check->($line, $filename, $lines) };
         $err = $@ if $@;
         return $err if $err and $err ne 1;
     }
