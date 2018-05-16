@@ -49,7 +49,7 @@ sub _cmd {
 
     my @cmd = (
         $^X,
-        (map "-I$_", @$inc),
+        (map "-I$_", @$inc, @INC),
         "-MMarkWarnings",
         @use_module,
         "-Mwarnings",
