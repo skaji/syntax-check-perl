@@ -4,7 +4,7 @@
 "   Description: This file adds support for checking perl syntax
 
 let g:ale_perl_syntax_check_executable =
-\   get(g:, 'ale_perl_perl_executable', 'perl')
+\   get(g:, 'ale_perl_syntax_check_executable', 'perl')
 
 let g:ale_perl_syntax_check_config =
 \   get(g:, 'ale_perl_syntax_check_config', g:plug_home . '/syntax-check-perl/config/default.pl')
@@ -17,7 +17,7 @@ function! ale_linters#perl#syntax_check#GetConfig(buffer) abort
 endfunction
 
 function! ale_linters#perl#syntax_check#GetExecutable(buffer) abort
-    return ale#Var(a:buffer, 'perl_perl_executable')
+    return ale#Var(a:buffer, 'perl_syntax_check_executable')
 endfunction
 
 function! ale_linters#perl#syntax_check#GetCommand(buffer) abort
@@ -72,7 +72,7 @@ endfunction
 
 call ale#linter#Define('perl', {
 \   'name': 'syntax-check',
-\   'executable_callback': 'ale_linters#perl#perl#GetExecutable',
+\   'executable_callback': 'ale_linters#perl#syntax_check#GetExecutable',
 \   'output_stream': 'both',
 \   'command_callback': 'ale_linters#perl#syntax_check#GetCommand',
 \   'callback': 'ale_linters#perl#syntax_check#Handle',
