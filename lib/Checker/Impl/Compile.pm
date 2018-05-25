@@ -26,6 +26,7 @@ sub check {
         next if grep { $line =~ $_ } @{ $self->{skip} || [] };
         if (my ($m, $f, $l, $e) = $line =~ /^([^\n]+?) at (.+?) line (\d+)(,.*)?/) {
             if ($f eq $tempfile) {
+                $e //= "";
                 push @err, { type => $type, message => "$m$e", line => 0+$l, from => (ref $self) };
             }
         }
