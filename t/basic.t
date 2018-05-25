@@ -46,7 +46,7 @@ subtest basic => sub {
 
     @err = $checker->_run("t/file/invalid.pl", "t/file/invalid.pl");
     is @err, 1;
-    is_deeply $err[0], { type => 'ERROR', message => 'syntax error', line => 4, from => 'Checker::Impl::Compile' };
+    is_deeply $err[0], { type => 'ERROR', message => 'syntax error, near "ff', line => 4, from => 'Checker::Impl::Compile' };
 };
 
 subtest skip => sub {
