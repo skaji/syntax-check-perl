@@ -24,9 +24,10 @@ sub check {
     while (my $line = <$fh>) {
         my $type = $line =~ s/^=MarkWarnings=// ? 'WARN' : 'ERROR'; # must s/// before checking skips
         next if grep { $line =~ $_ } @{ $self->{skip} || [] };
-        if (my ($m, $f, $l) = $line =~ /^([^\n]+?) at (.+?) line (\d+)/) {
+        if (my ($m, $f, $l, $e) = $line =~ /^([^\n]+?) at (.+?) line (\d+)(,.*)?/) {
             if ($f eq $tempfile) {
-                push @err, { type => $type, message => $m, line => 0+$l, from => (ref $self) };
+                $e = "" unless defined $e;
+                push @err, { type => $type, message => "$m$e", line => 0+$l, from => (ref $self) };
             }
         }
     }
