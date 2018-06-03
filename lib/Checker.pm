@@ -53,7 +53,6 @@ sub _load_config {
     if (!File::Spec->file_name_is_absolute($self->{config_file})) {
         $self->{config_file} = File::Spec->catfile(Cwd::getcwd(), $self->{config_file});
     }
-    local $ENV{PERL_SYNTAX_CHECK_FILENAME} = $filename;
     my $config = do $self->{config_file};
     die "$self->{config_file}: ", $@ || $! unless $config;
     $self->{config} = $config;
@@ -91,6 +90,8 @@ sub run {
     my ($filename, $tempfile) = $self->parse_options(@_);
     $self->_show_usage unless $filename;
     $tempfile ||= $filename;
+
+    local $ENV{PERL_SYNTAX_CHECK_FILENAME} = $filename;
     $self->_load_config if $self->{config_file};
     my @err = $self->_run($filename, $tempfile);
     my $formatter;
