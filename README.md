@@ -25,6 +25,9 @@ let g:ale_perl_syntax_check_config = expand('~/.vim/your-config.pl')
 
 " there is also my favorite, and you can use it:)
 let g:ale_perl_syntax_check_config = g:plug_home . '/syntax-check-perl/config/relax.pl'
+
+" add arbitrary perl executable names. defaults to "perl"
+let g:ale_perl_syntax_check_executable = 'my-perl'
 ```
 
 The config files are written in Perl, so you can do whatever you want:) See [default.pl](config/default.pl).

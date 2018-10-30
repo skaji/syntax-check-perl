@@ -3,6 +3,9 @@
 "   Author: Vincent Lequertier <https://github.com/SkySymbol>
 "   Description: This file adds support for checking perl syntax
 
+let g:ale_perl_syntax_check_executable =
+\   get(g:, 'ale_perl_syntax_check_executable', 'perl')
+
 let g:ale_perl_syntax_check_config =
 \   get(g:, 'ale_perl_syntax_check_config', g:plug_home . '/syntax-check-perl/config/default.pl')
 
@@ -10,11 +13,16 @@ function! ale_linters#perl#syntax_check#GetConfig(buffer) abort
     return ale#Var(a:buffer, 'perl_syntax_check_config')
 endfunction
 
+function! ale_linters#perl#syntax_check#GetExecutable(buffer) abort
+    return ale#Var(a:buffer, 'perl_syntax_check_executable')
+endfunction
+
 function! ale_linters#perl#syntax_check#GetCommand(buffer) abort
     let l:config = ale_linters#perl#syntax_check#GetConfig(a:buffer)
     if filereadable(l:config)
-        return g:plug_home . '/syntax-check-perl/syntax-check'
-        \    . ' --config ' . ale#Escape(l:config)
+        return ale#Escape(ale_linters#perl#syntax_check#GetExecutable(a:buffer))
+        \    . ' ' . g:plug_home . '/syntax-check-perl/syntax-check'
+        \    . ' --config ' . ale#Escape(ale_linters#perl#syntax_check#GetConfig(a:buffer))
         \    . ' %s %t'
     else
         echo "[ERROR] ale plugin syntax-check-perl: Couldn't read config file " . l:config
@@ -60,7 +68,7 @@ endfunction
 
 call ale#linter#Define('perl', {
 \   'name': 'syntax-check',
-\   'executable': 'perl',
+\   'executable_callback': 'ale_linters#perl#syntax_check#GetExecutable',
 \   'output_stream': 'both',
 \   'command_callback': 'ale_linters#perl#syntax_check#GetCommand',
 \   'callback': 'ale_linters#perl#syntax_check#Handle',
