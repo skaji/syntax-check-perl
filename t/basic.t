@@ -2,9 +2,13 @@ use strict;
 use warnings;
 use Capture::Tiny 'capture_merged';
 use Checker;
+use Checker::Impl::Compile ();
+use File::Spec ( );
 use JSON::PP 'decode_json';
 
 use Test::More;
+use Test::Deep qw( cmp_deeply );
+use Test::Fatal qw( exception );
 
 my $ref_warn = $] >= 5.022 ? "single ref" : "reference";
 
@@ -109,5 +113,70 @@ subtest output => sub {
     like $decoded->[0]{message}, qr/Can't locate FOOOOOOOO.pm/;
     is $decoded->[0]{line}, 5;
 };
+
+subtest config_file_does_not_exist => sub {
+    my $checker = Checker->new( config_file => 'does_not_exist.pl' );
+    like(
+        exception( sub { $checker->_load_config } ),
+        qr{No such file or directory}, 'exception on config file not found'
+    );
+};
+
+subtest custom_config_file => sub {
+    my $checker = Checker->new( config_file => 't/config/custom.pl' );
+    $checker->_load_config;
+    cmp_deeply(
+        $checker->{config},
+        { compile => { inc => ['t/lib'] } },
+        'config loaded'
+    );
+
+    my $compile = Checker::Impl::Compile->new( %{$checker->{config}->{compile}} );
+
+    my @inc = @{$compile->_inc};
+    is( shift @inc, 't/lib', 'custom lib at front of inc' );
+    cmp_deeply( _get_children(\@inc), ['extlib', 'lib'], 'default folders added to inc' );
+
+    my @cmd = @{$compile->_cmd};
+    is( $cmd[1], '-It/lib', 'custom lib at front of inc' );
+    cmp_deeply(
+        _get_children( [ @cmd[ 2, 3 ] ] ),
+        [ 'extlib', 'lib' ],
+        'default folders added to inc in command'
+    );
+};
+
+subtest no_config_file => sub {
+    my $checker = Checker->new;
+    cmp_deeply(
+        $checker->{config},
+        undef,
+        'no config loaded'
+    );
+
+    my $compile
+        = Checker::Impl::Compile->new( %{ $checker->{config}->{compile} } );
+
+    my @inc = @{ $compile->_inc };
+    cmp_deeply(
+        _get_children( \@inc ),
+        [ 'extlib', 'lib' ],
+        'default folders added to inc'
+    );
+
+    my @cmd = @{ $compile->_cmd };
+    cmp_deeply(
+        _get_children( [ @cmd[ 1, 2 ] ] ),
+        [ 'extlib', 'lib' ],
+        'default folders added to inc in command'
+    );
+};
+
+sub _get_children {
+    my $paths = shift;
+
+    my @libs = map { (File::Spec->splitpath($_))[-1] } @{$paths};
+    return \@libs;
+}
 
 done_testing;
