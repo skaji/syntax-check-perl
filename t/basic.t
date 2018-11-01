@@ -3,7 +3,7 @@ use warnings;
 use Capture::Tiny 'capture_merged';
 use Checker;
 use Checker::Impl::Compile ();
-use File::Spec ( );
+use File::Spec             ();
 use JSON::PP 'decode_json';
 
 use Test::More;
@@ -127,30 +127,78 @@ subtest custom_config_file => sub {
     $checker->_load_config;
     eq_or_diff(
         $checker->{config},
-        { compile => { inc => ['my-lib'] } },
+        {
+            compile => {
+                inc => {
+                    libs    => [ 't/lib', 'lib', 'local/lib/perl5', ],
+                    replace => 0,
+                }
+            }
+        },
         'config loaded'
     );
 
-    my $compile = Checker::Impl::Compile->new( %{$checker->{config}->{compile}} );
+    my $compile
+        = Checker::Impl::Compile->new( %{ $checker->{config}->{compile} } );
 
-    my @inc = @{$compile->_inc};
-    eq_or_diff( _get_children(\@inc), ['extlib', 'my-lib', 'lib'], 'default folders added to inc' );
+    my @inc = @{ $compile->_inc };
+    eq_or_diff(
+        _get_children( \@inc ), [ 'syntax-check-perl/extlib', 't/lib', 'syntax-check-perl/lib' ],
+        'default folders added to inc'
+    );
 
-    my @cmd = @{$compile->_cmd};
+    my @cmd = @{ $compile->_cmd };
 
     eq_or_diff(
         _get_children( [ @cmd[ 1, 2, 3 ] ] ),
-        [ 'extlib', 'my-lib', 'lib' ],
+        [ 'syntax-check-perl/extlib', 't/lib', 'syntax-check-perl/lib' ],
         'default folders added to inc in command'
+    );
+};
+
+subtest custom_config_file_with_replace => sub {
+    local $ENV{REPLACE_LIBS} = 1;
+    my $checker = Checker->new( config_file => 't/config/custom.pl' );
+    $checker->_load_config;
+    eq_or_diff(
+        $checker->{config},
+        {
+            compile => {
+                inc => {
+                    libs    => [ 't/lib' ],
+                    replace => 1,
+                }
+            }
+        },
+        'config loaded'
+    );
+
+    my $compile
+        = Checker::Impl::Compile->new( %{ $checker->{config}->{compile} } );
+
+    my @inc = @{ $compile->_inc };
+    eq_or_diff(
+        _get_children( \@inc ), [ 'syntax-check-perl/extlib', 't/lib', ],
+        'folders added to inc'
+    );
+
+    my @cmd = @{ $compile->_cmd };
+
+    eq_or_diff(
+        _get_children( [ @cmd[ 1, 2 ] ] ),
+        [ 'syntax-check-perl/extlib', 't/lib' ],
+        'folders added to inc in command'
     );
 };
 
 subtest no_config_file => sub {
     my $checker = Checker->new;
+    $checker->_load_config;
     eq_or_diff(
         $checker->{config},
+        { compile => { inc => { libs => [ 'lib', 'local/lib/perl5', ] } } },
         undef,
-        'no config loaded'
+        'default config loaded'
     );
 
     my $compile
@@ -159,14 +207,14 @@ subtest no_config_file => sub {
     my @inc = @{ $compile->_inc };
     eq_or_diff(
         _get_children( \@inc ),
-        [ 'extlib', 'lib' ],
+        [ 'syntax-check-perl/extlib', 'syntax-check-perl/lib', ],
         'default folders added to inc'
     );
 
     my @cmd = @{ $compile->_cmd };
     eq_or_diff(
         _get_children( [ @cmd[ 1, 2 ] ] ),
-        [ 'extlib', 'lib' ],
+        [ 'syntax-check-perl/extlib', 'syntax-check-perl/lib' ],
         'default folders added to inc in command'
     );
 };
@@ -174,10 +222,14 @@ subtest no_config_file => sub {
 sub _get_children {
     my $paths = shift;
 
-    my @libs = map { (File::Spec->splitpath($_))[-1] } @{$paths};
+    my @libs;
+    for my $path ( @{$paths} ) {
+        my @dirs = File::Spec->splitdir($path);
+        push @libs, @dirs > 1 ? join '/', @dirs[-2,-1] : $dirs[0];
+    }
 
     # Strip -I switch from relative paths.
-    for my $lib ( @libs ) {
+    for my $lib (@libs) {
         $lib =~ s{\A\-I}{};
     }
     return \@libs;

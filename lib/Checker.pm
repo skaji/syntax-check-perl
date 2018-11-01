@@ -5,6 +5,7 @@ use Cwd ();
 use File::Basename ();
 use File::Spec;
 use Getopt::Long qw(:config no_auto_abbrev no_ignore_case bundling);
+use Hash::Merge qw( merge );
 
 sub _slurp {
     my $file = shift;
@@ -50,11 +51,28 @@ sub _load_impl {
 
 sub _load_config {
     my ($self, $filename) = @_;
-    if (!File::Spec->file_name_is_absolute($self->{config_file})) {
-        $self->{config_file} = File::Spec->catfile(Cwd::getcwd(), $self->{config_file});
+    my $config;
+    if ( $self->{config_file} ) {
+        if ( !File::Spec->file_name_is_absolute( $self->{config_file} ) ) {
+            $self->{config_file}
+                = File::Spec->catfile( Cwd::getcwd(), $self->{config_file} );
+        }
+        $config = do $self->{config_file};
+        die "$self->{config_file}: ", $@ || $! unless $config;
     }
-    my $config = do $self->{config_file};
-    die "$self->{config_file}: ", $@ || $! unless $config;
+
+    my @default_libs = ( 'lib', 'local/lib/perl5', );
+
+    my $default_compile = {
+        compile => { inc => { libs => [], replace => 0 } },
+    };
+
+    $config = merge( $config, $default_compile );
+
+    if ( !$config->{compile}{inc}{replace} ) {
+        push @{ $config->{compile}{inc}{libs} }, @default_libs;
+    }
+
     $self->{config} = $config;
 }
 
@@ -92,7 +110,7 @@ sub run {
     $tempfile ||= $filename;
 
     local $ENV{PERL_SYNTAX_CHECK_FILENAME} = $filename;
-    $self->_load_config if $self->{config_file};
+    $self->_load_config;
     my @err = $self->_run($filename, $tempfile);
     my $formatter;
     if ($self->{format} eq "json") {

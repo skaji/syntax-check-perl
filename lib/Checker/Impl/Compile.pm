@@ -63,23 +63,32 @@ sub _inc {
     my $self = shift;
 
     my @inc = ( Checker::Home->get . '/extlib' );
-    push @inc, @{$self->{inc}} if $self->{inc};
+    push @inc, @{$self->{inc}{libs}} if $self->{inc}{libs};
 
     my $version = $Config{version};
     my $back = getcwd;
+
+    my @relative = grep { !File::Spec->file_name_is_absolute($_) } @inc;
+
+    # Find project root directory.
     for (1..10) {
-        my $cwd = getcwd;
-        last if $cwd eq "/";
-        my $lib = -d "lib";
-        my $local = -d "local/lib/perl5/$version";
-        if ($lib or $local) {
-            push @inc, abs_path "lib" if $lib;
-            push @inc, abs_path "local/lib/perl5" if $local;
-            last;
+        last if getcwd eq '/';
+
+        for my $dir (@relative) {
+
+            # Is this the top level directory for the project?
+            if ( -d $dir ) {
+                @inc = map { abs_path($_) } @inc;
+                last;
+            }
         }
-        chdir "..";
+        chdir '..';
     }
+
     chdir $back;
+
+    # Remove paths which are undefined or do not exist
+    @inc = grep { $_ && -d $_ } @inc;
     \@inc;
 }
 
