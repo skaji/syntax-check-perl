@@ -51,7 +51,7 @@ sub _load_impl {
 
 sub _load_config {
     my ($self, $filename) = @_;
-    my $config;
+    my $config = {};
     if ( $self->{config_file} ) {
         if ( !File::Spec->file_name_is_absolute( $self->{config_file} ) ) {
             $self->{config_file}
@@ -64,12 +64,13 @@ sub _load_config {
     my @default_libs = ( 'lib', 'local/lib/perl5', );
 
     my $default_compile = {
-        compile => { inc => { libs => [], replace => 0 } },
+        compile => { inc => { libs => [] } },
     };
 
     $config = merge( $config, $default_compile );
 
-    if ( !$config->{compile}{inc}{replace} ) {
+    if (  !$config->{compile}{inc}{replace_default_libs}
+        && ref $config->{compile}{inc}{libs} eq 'ARRAY' ) {
         push @{ $config->{compile}{inc}{libs} }, @default_libs;
     }
 

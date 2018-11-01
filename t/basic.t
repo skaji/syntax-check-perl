@@ -130,8 +130,8 @@ subtest custom_config_file => sub {
         {
             compile => {
                 inc => {
-                    libs    => [ 't/lib', 'lib', 'local/lib/perl5', ],
-                    replace => 0,
+                    libs => [ 't/lib', 'lib', 'local/lib/perl5', ],
+                    replace_default_libs => 0,
                 }
             }
         },
@@ -156,8 +156,8 @@ subtest custom_config_file => sub {
     );
 };
 
-subtest custom_config_file_with_replace => sub {
-    local $ENV{REPLACE_LIBS} = 1;
+subtest custom_config_file_with_replace_default_libs => sub {
+    local $ENV{REPLACE_DEFAULT_LIBS} = 1;
     my $checker = Checker->new( config_file => 't/config/custom.pl' );
     $checker->_load_config;
     eq_or_diff(
@@ -165,8 +165,8 @@ subtest custom_config_file_with_replace => sub {
         {
             compile => {
                 inc => {
-                    libs    => [ 't/lib' ],
-                    replace => 1,
+                    libs                 => ['t/lib'],
+                    replace_default_libs => 1,
                 }
             }
         },
