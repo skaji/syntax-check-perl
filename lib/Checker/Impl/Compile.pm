@@ -71,24 +71,21 @@ sub _inc {
     my @relative = grep { !File::Spec->file_name_is_absolute($_) } @inc;
 
     # Find project root directory.
+    LEVEL:
     for (1..10) {
-        last if getcwd eq '/';
+        last LEVEL if getcwd eq '/';
 
+        # Is this the top level directory for the project?
         for my $dir (@relative) {
-
-            # Is this the top level directory for the project?
-            if ( -d $dir ) {
-                @inc = map { abs_path($_) } @inc;
-                last;
-            }
+            last LEVEL if -d $dir;
         }
         chdir '..';
     }
 
-    chdir $back;
-
     # Remove paths which are undefined or do not exist
-    @inc = grep { $_ && -d $_ } @inc;
+    @inc = grep { $_ && -d $_ } map{ abs_path($_) } @inc;
+
+    chdir $back;
     \@inc;
 }
 
