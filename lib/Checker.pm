@@ -5,7 +5,6 @@ use Cwd ();
 use File::Basename ();
 use File::Spec;
 use Getopt::Long qw(:config no_auto_abbrev no_ignore_case bundling);
-use Hash::Merge qw( merge );
 
 sub _slurp {
     my $file = shift;
@@ -67,7 +66,9 @@ sub _load_config {
         compile => { inc => { libs => [] } },
     };
 
-    $config = merge( $config, $default_compile );
+    if ( !$config->{compile}{inc}{libs} ) {
+        $config->{compile}{inc}{libs} = [];
+    }
 
     if (  !$config->{compile}{inc}{replace_default_libs}
         && ref $config->{compile}{inc}{libs} eq 'ARRAY' ) {

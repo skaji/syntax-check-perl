@@ -1,5 +1,4 @@
 recommends 'JSON::PP';
-requires 'Hash::Merge';
 
 on test => sub {
     requires 'JSON::PP';
