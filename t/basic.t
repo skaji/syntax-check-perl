@@ -7,7 +7,7 @@ use File::Spec ( );
 use JSON::PP 'decode_json';
 
 use Test::More;
-use Test::Deep qw( cmp_deeply );
+use Test::Differences qw( eq_or_diff );
 use Test::Fatal qw( exception );
 
 my $ref_warn = $] >= 5.022 ? "single ref" : "reference";
@@ -125,30 +125,29 @@ subtest config_file_does_not_exist => sub {
 subtest custom_config_file => sub {
     my $checker = Checker->new( config_file => 't/config/custom.pl' );
     $checker->_load_config;
-    cmp_deeply(
+    eq_or_diff(
         $checker->{config},
-        { compile => { inc => ['t/lib'] } },
+        { compile => { inc => ['my-lib'] } },
         'config loaded'
     );
 
     my $compile = Checker::Impl::Compile->new( %{$checker->{config}->{compile}} );
 
     my @inc = @{$compile->_inc};
-    is( shift @inc, 't/lib', 'custom lib at front of inc' );
-    cmp_deeply( _get_children(\@inc), ['extlib', 'lib'], 'default folders added to inc' );
+    eq_or_diff( _get_children(\@inc), ['extlib', 'my-lib', 'lib'], 'default folders added to inc' );
 
     my @cmd = @{$compile->_cmd};
-    is( $cmd[1], '-It/lib', 'custom lib at front of inc' );
-    cmp_deeply(
-        _get_children( [ @cmd[ 2, 3 ] ] ),
-        [ 'extlib', 'lib' ],
+
+    eq_or_diff(
+        _get_children( [ @cmd[ 1, 2, 3 ] ] ),
+        [ 'extlib', 'my-lib', 'lib' ],
         'default folders added to inc in command'
     );
 };
 
 subtest no_config_file => sub {
     my $checker = Checker->new;
-    cmp_deeply(
+    eq_or_diff(
         $checker->{config},
         undef,
         'no config loaded'
@@ -158,14 +157,14 @@ subtest no_config_file => sub {
         = Checker::Impl::Compile->new( %{ $checker->{config}->{compile} } );
 
     my @inc = @{ $compile->_inc };
-    cmp_deeply(
+    eq_or_diff(
         _get_children( \@inc ),
         [ 'extlib', 'lib' ],
         'default folders added to inc'
     );
 
     my @cmd = @{ $compile->_cmd };
-    cmp_deeply(
+    eq_or_diff(
         _get_children( [ @cmd[ 1, 2 ] ] ),
         [ 'extlib', 'lib' ],
         'default folders added to inc in command'
@@ -176,6 +175,11 @@ sub _get_children {
     my $paths = shift;
 
     my @libs = map { (File::Spec->splitpath($_))[-1] } @{$paths};
+
+    # Strip -I switch from relative paths.
+    for my $lib ( @libs ) {
+        $lib =~ s{\A\-I}{};
+    }
     return \@libs;
 }
 

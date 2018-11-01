@@ -62,8 +62,8 @@ sub _cmd {
 sub _inc {
     my $self = shift;
 
-    my @inc = $self->{inc} ? @{$self->{inc}} : ();
-    push @inc, Checker::Home->get . "/extlib";
+    my @inc = ( Checker::Home->get . '/extlib' );
+    push @inc, @{$self->{inc}} if $self->{inc};
 
     my $version = $Config{version};
     my $back = getcwd;

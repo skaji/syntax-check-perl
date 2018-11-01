@@ -3,6 +3,6 @@ use warnings;
 
 return {
     compile => {
-        inc => ['t/lib'],
+        inc => ['my-lib'],
     },
 };
