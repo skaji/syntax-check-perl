@@ -2,9 +2,13 @@ use strict;
 use warnings;
 use Capture::Tiny 'capture_merged';
 use Checker;
+use Checker::Impl::Compile ();
+use File::Spec ( );
 use JSON::PP 'decode_json';
 
 use Test::More;
+use Test::Differences qw( eq_or_diff );
+use Test::Fatal qw( exception );
 
 my $ref_warn = $] >= 5.022 ? "single ref" : "reference";
 
@@ -109,5 +113,74 @@ subtest output => sub {
     like $decoded->[0]{message}, qr/Can't locate FOOOOOOOO.pm/;
     is $decoded->[0]{line}, 5;
 };
+
+subtest config_file_does_not_exist => sub {
+    my $checker = Checker->new( config_file => 'does_not_exist.pl' );
+    like(
+        exception( sub { $checker->_load_config } ),
+        qr{No such file or directory}, 'exception on config file not found'
+    );
+};
+
+subtest custom_config_file => sub {
+    my $checker = Checker->new( config_file => 't/config/custom.pl' );
+    $checker->_load_config;
+    eq_or_diff(
+        $checker->{config},
+        { compile => { inc => ['my-lib'] } },
+        'config loaded'
+    );
+
+    my $compile = Checker::Impl::Compile->new( %{$checker->{config}->{compile}} );
+
+    my @inc = @{$compile->_inc};
+    eq_or_diff( _get_children(\@inc), ['extlib', 'my-lib', 'lib'], 'default folders added to inc' );
+
+    my @cmd = @{$compile->_cmd};
+
+    eq_or_diff(
+        _get_children( [ @cmd[ 1, 2, 3 ] ] ),
+        [ 'extlib', 'my-lib', 'lib' ],
+        'default folders added to inc in command'
+    );
+};
+
+subtest no_config_file => sub {
+    my $checker = Checker->new;
+    eq_or_diff(
+        $checker->{config},
+        undef,
+        'no config loaded'
+    );
+
+    my $compile
+        = Checker::Impl::Compile->new( %{ $checker->{config}->{compile} } );
+
+    my @inc = @{ $compile->_inc };
+    eq_or_diff(
+        _get_children( \@inc ),
+        [ 'extlib', 'lib' ],
+        'default folders added to inc'
+    );
+
+    my @cmd = @{ $compile->_cmd };
+    eq_or_diff(
+        _get_children( [ @cmd[ 1, 2 ] ] ),
+        [ 'extlib', 'lib' ],
+        'default folders added to inc in command'
+    );
+};
+
+sub _get_children {
+    my $paths = shift;
+
+    my @libs = map { (File::Spec->splitpath($_))[-1] } @{$paths};
+
+    # Strip -I switch from relative paths.
+    for my $lib ( @libs ) {
+        $lib =~ s{\A\-I}{};
+    }
+    return \@libs;
+}
 
 done_testing;
