@@ -30,7 +30,22 @@ let g:ale_perl_syntax_check_config = g:plug_home . '/syntax-check-perl/config/re
 let g:ale_perl_syntax_check_executable = 'my-perl'
 ```
 
-The config files are written in Perl, so you can do whatever you want:) See [default.pl](config/default.pl).
+The config files are written in Perl, so you can do whatever you want. :) See [default.pl](config/default.pl).
+
+### Adding libs to @INC
+
+By default we try to add `lib` and `local/lib/perl5` to `@INC` when attempting
+to compile your code.  Depending on how you work, this may not be what you
+want.  The good news is that you can manage this via the Perl config file.  See
+also [default.pl](config/default.pl) for more detailed information on how to do
+this.
+
+## Security
+
+You should be aware that we use the `-c` flag to see if `perl` code compiles.
+This does not execute all of the code in a file, but it does run `BEGIN` and
+`CHECK` blocks. See `perl --help` and
+[StackOverflow](https://stackoverflow.com/a/12908487/406224).
 
 ## Debugging
 

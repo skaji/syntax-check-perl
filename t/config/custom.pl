@@ -3,6 +3,9 @@ use warnings;
 
 return {
     compile => {
-        inc => ['my-lib'],
+        inc => {
+            libs                 => ['t/lib'],
+            replace_default_libs => $ENV{REPLACE_DEFAULT_LIBS} ? 1 : 0,
+        }
     },
 };

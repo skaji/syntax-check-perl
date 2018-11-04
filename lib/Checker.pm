@@ -50,11 +50,31 @@ sub _load_impl {
 
 sub _load_config {
     my ($self, $filename) = @_;
-    if (!File::Spec->file_name_is_absolute($self->{config_file})) {
-        $self->{config_file} = File::Spec->catfile(Cwd::getcwd(), $self->{config_file});
+    my $config = {};
+    if ( $self->{config_file} ) {
+        if ( !File::Spec->file_name_is_absolute( $self->{config_file} ) ) {
+            $self->{config_file}
+                = File::Spec->catfile( Cwd::getcwd(), $self->{config_file} );
+        }
+        $config = do $self->{config_file};
+        die "$self->{config_file}: ", $@ || $! unless $config;
     }
-    my $config = do $self->{config_file};
-    die "$self->{config_file}: ", $@ || $! unless $config;
+
+    my @default_libs = ( 'lib', 'local/lib/perl5', );
+
+    my $default_compile = {
+        compile => { inc => { libs => [] } },
+    };
+
+    if ( !$config->{compile}{inc}{libs} ) {
+        $config->{compile}{inc}{libs} = [];
+    }
+
+    if (  !$config->{compile}{inc}{replace_default_libs}
+        && ref $config->{compile}{inc}{libs} eq 'ARRAY' ) {
+        push @{ $config->{compile}{inc}{libs} }, @default_libs;
+    }
+
     $self->{config} = $config;
 }
 
@@ -92,7 +112,7 @@ sub run {
     $tempfile ||= $filename;
 
     local $ENV{PERL_SYNTAX_CHECK_FILENAME} = $filename;
-    $self->_load_config if $self->{config_file};
+    $self->_load_config;
     my @err = $self->_run($filename, $tempfile);
     my $formatter;
     if ($self->{format} eq "json") {
