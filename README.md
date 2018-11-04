@@ -34,7 +34,7 @@ The config files are written in Perl, so you can do whatever you want. :) See [d
 
 ### Adding libs to @INC
 
-By default we try to add `lib` and `local/lib/perl5` to `@INC` when attempting
+By default we try to add `lib`, `t/lib`, `xt/lib` and `local/lib/perl5` to `@INC` when attempting
 to compile your code.  Depending on how you work, this may not be what you
 want.  The good news is that you can manage this via the Perl config file.  See
 also [default.pl](config/default.pl) for more detailed information on how to do

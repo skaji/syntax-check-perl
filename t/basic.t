@@ -4,7 +4,10 @@ use Capture::Tiny 'capture_merged';
 use Checker;
 use Checker::Impl::Compile ();
 use File::Spec             ();
+use File::Path ();
 use JSON::PP 'decode_json';
+use File::pushd ();
+use Config;
 
 use Test::More;
 use Test::Differences qw( eq_or_diff );
@@ -130,7 +133,7 @@ subtest custom_config_file => sub {
         {
             compile => {
                 inc => {
-                    libs => [ 't/lib', 'lib', 'local/lib/perl5', ],
+                    libs => [ 't/custom-lib' ],
                     replace_default_libs => 0,
                 }
             }
@@ -139,11 +142,11 @@ subtest custom_config_file => sub {
     );
 
     my $compile
-        = Checker::Impl::Compile->new( %{ $checker->{config}->{compile} } );
+        = Checker::Impl::Compile->new( root => $checker->{root}, %{ $checker->{config}->{compile} } );
 
     my @inc = @{ $compile->_inc };
     eq_or_diff(
-        _get_children( \@inc ), [ 'syntax-check-perl/extlib', 't/lib', 'syntax-check-perl/lib' ],
+        _get_children( \@inc ), [ 'syntax-check-perl/extlib', 't/custom-lib', "syntax-check-perl/lib", ],
         'default folders added to inc'
     );
 
@@ -151,7 +154,7 @@ subtest custom_config_file => sub {
 
     eq_or_diff(
         _get_children( [ @cmd[ 1, 2, 3 ] ] ),
-        [ 'syntax-check-perl/extlib', 't/lib', 'syntax-check-perl/lib' ],
+        [ 'syntax-check-perl/extlib', 't/custom-lib', "syntax-check-perl/lib", ],
         'default folders added to inc in command'
     );
 };
@@ -165,7 +168,7 @@ subtest custom_config_file_with_replace_default_libs => sub {
         {
             compile => {
                 inc => {
-                    libs                 => ['t/lib'],
+                    libs                 => ['t/custom-lib'],
                     replace_default_libs => 1,
                 }
             }
@@ -174,11 +177,11 @@ subtest custom_config_file_with_replace_default_libs => sub {
     );
 
     my $compile
-        = Checker::Impl::Compile->new( %{ $checker->{config}->{compile} } );
+        = Checker::Impl::Compile->new( root => $checker->{root}, %{ $checker->{config}->{compile} } );
 
     my @inc = @{ $compile->_inc };
     eq_or_diff(
-        _get_children( \@inc ), [ 'syntax-check-perl/extlib', 't/lib', ],
+        _get_children( \@inc ), [ 'syntax-check-perl/extlib', 't/custom-lib', ],
         'folders added to inc'
     );
 
@@ -186,37 +189,42 @@ subtest custom_config_file_with_replace_default_libs => sub {
 
     eq_or_diff(
         _get_children( [ @cmd[ 1, 2 ] ] ),
-        [ 'syntax-check-perl/extlib', 't/lib' ],
+        [ 'syntax-check-perl/extlib', 't/custom-lib' ],
         'folders added to inc in command'
     );
 };
 
 subtest no_config_file => sub {
-    my $checker = Checker->new;
-    $checker->_load_config;
-    eq_or_diff(
-        $checker->{config},
-        { compile => { inc => { libs => [ 'lib', 'local/lib/perl5', ] } } },
-        undef,
-        'default config loaded'
-    );
-
     my $compile
-        = Checker::Impl::Compile->new( %{ $checker->{config}->{compile} } );
+        = Checker::Impl::Compile->new( root => "." );
 
     my @inc = @{ $compile->_inc };
     eq_or_diff(
         _get_children( \@inc ),
-        [ 'syntax-check-perl/extlib', 'syntax-check-perl/lib', ],
+        [ 'syntax-check-perl/extlib', "./lib" ],
         'default folders added to inc'
     );
 
     my @cmd = @{ $compile->_cmd };
     eq_or_diff(
         _get_children( [ @cmd[ 1, 2 ] ] ),
-        [ 'syntax-check-perl/extlib', 'syntax-check-perl/lib' ],
+        [ 'syntax-check-perl/extlib', "./lib" ],
         'default folders added to inc in command'
     );
+};
+
+subtest default_libs => sub {
+    my $guard = File::pushd::tempd;
+    File::Path::mkpath $_ for "lib", "t/lib", "xt/lib", "local/lib/perl5/$Config{version}";
+    chdir "t";
+    my $compile = Checker::Impl::Compile->new(root => Checker->new->{root});
+    my $inc = $compile->_inc;
+    is @$inc, 5;
+    like $inc->[0], qr{/extlib$};
+    like $inc->[1], qr{/lib$};
+    like $inc->[2], qr{/t/lib$};
+    like $inc->[3], qr{/xt/lib$};
+    like $inc->[4], qr{/local/lib/perl5$};
 };
 
 sub _get_children {

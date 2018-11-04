@@ -30,7 +30,27 @@ sub _snake_case {
 sub new {
     my ($class, %args) = @_;
     my @impl = $class->_load_impl;
-    bless { impl => \@impl, format => "ale", %args }, $class;
+    my $root = $class->_root;
+    bless { impl => \@impl, format => "ale", root => $root, %args }, $class;
+}
+
+sub _root {
+    my $back = Cwd::getcwd;
+    my $root = $back;
+    for (1..10) {
+        my $cwd = Cwd::abs_path ".";
+        last if $cwd eq "/";
+        if (
+            grep { -e $_ } qw(t xt Makefile.PL Build.PL dist.ini minil.toml)
+            or (-d "lib" && $cwd !~  m{/(?:t|xt)$})
+        ) {
+            $root = $cwd;
+            last;
+        }
+        chdir "..";
+    }
+    chdir $back;
+    return $root;
 }
 
 sub _load_impl {
@@ -49,32 +69,12 @@ sub _load_impl {
 }
 
 sub _load_config {
-    my ($self, $filename) = @_;
-    my $config = {};
-    if ( $self->{config_file} ) {
-        if ( !File::Spec->file_name_is_absolute( $self->{config_file} ) ) {
-            $self->{config_file}
-                = File::Spec->catfile( Cwd::getcwd(), $self->{config_file} );
-        }
-        $config = do $self->{config_file};
-        die "$self->{config_file}: ", $@ || $! unless $config;
+    my $self = shift;
+    if (!File::Spec->file_name_is_absolute($self->{config_file})) {
+        $self->{config_file} = File::Spec->catfile(Cwd::getcwd(), $self->{config_file});
     }
-
-    my @default_libs = ( 'lib', 'local/lib/perl5', );
-
-    my $default_compile = {
-        compile => { inc => { libs => [] } },
-    };
-
-    if ( !$config->{compile}{inc}{libs} ) {
-        $config->{compile}{inc}{libs} = [];
-    }
-
-    if (  !$config->{compile}{inc}{replace_default_libs}
-        && ref $config->{compile}{inc}{libs} eq 'ARRAY' ) {
-        push @{ $config->{compile}{inc}{libs} }, @default_libs;
-    }
-
+    my $config = do $self->{config_file};
+    die "$self->{config_file}: ", $@ || $! unless $config;
     $self->{config} = $config;
 }
 
@@ -112,7 +112,8 @@ sub run {
     $tempfile ||= $filename;
 
     local $ENV{PERL_SYNTAX_CHECK_FILENAME} = $filename;
-    $self->_load_config;
+    local $ENV{PERL_SYNTAX_CHECK_ROOT} = $self->{root};
+    $self->_load_config if $self->{config_file};
     my @err = $self->_run($filename, $tempfile);
     my $formatter;
     if ($self->{format} eq "json") {
@@ -138,8 +139,11 @@ sub _run {
         my $copy = $klass;
         $copy =~ s/^Checker::Impl:://;
         my $snake_case_klass = _snake_case $copy;
-        my $c = $config->{$snake_case_klass} || {};
-        my $impl = $klass->new(%$c);
+        my %c = (
+            root => $self->{root},
+            %{$config->{$snake_case_klass} || {}},
+        );
+        my $impl = $klass->new(%c);
         my @e = $impl->check($filename, $tempfile, $lines);
         push @err, @e if @e and defined $e[0];
     }
