@@ -2,6 +2,7 @@ use strict;
 use warnings;
 
 my $filename = $ENV{PERL_SYNTAX_CHECK_FILENAME} || "";
+my $root = $ENV{PERL_SYNTAX_CHECK_ROOT} || "";
 
 # must return a hash that represents configuration for syntax_check
 my $config = {};
@@ -12,15 +13,15 @@ __END__
 
   my $config = {
 
-    # for `perl -wc` configuration
+    # for `perl -c` configuration
     compile => {
-        inc => {
-            libs                 => [ 'lib', 't/lib', 'xt/lib', ],
-            replace_default_libs => 1,
-        },
-        skip => [
-            qr/^Subroutine \S+ redefined/,
-        ],
+      inc => {
+        libs                 => [ 'lib', 't/custom-lib' ],
+        replace_default_libs => 1,
+      },
+      skip => [
+        qr/^Subroutine \S+ redefined/,
+      ],
     },
 
     # check line by regexp
@@ -53,30 +54,29 @@ __END__
 The compile section defines the behaviour under which your code is run via the
 C<-c> flag.
 
-By default, we add C<lib> and C<local/lib/perl5> to C<@INC>.  If you would like
+By default, we add C<lib>, C<t/lib>, C<xt/lib> and C<local/lib/perl5> to C<@INC>.  If you would like
 to add to these paths, use something like this configuration:
 
   my $config = {
-      compile => {
-          inc => {
-              libs                 => ['foo/bar' 'my-custom-lib' ],
-              replace_default_libs => 0,
-          },
+    compile => {
+      inc => {
+        libs => ['foo/bar' 'my-custom-lib' ],
       },
-      ...
+    },
+    ...
   };
 
-This will give you an C<@INC> which includes: C<lib>, C<local/lib/perl>, C<foo/bar> and C<my-custom-lib>
+This will give you an C<@INC> which includes: C<lib>, C<t/lib>, C<xt/lib>, C<local/lib/perl5>, C<foo/bar> and C<my-custom-lib>
 
-If you would not like the defaults of C<lib> and C<local/lib/perl5> to be added
+If you would not like the defaults of C<lib>, C<t/lib>, C<xt/lib> and C<local/lib/perl5> to be added
 to C<@INC> you can use the C<replace_default_libs> key:
 
   my $config = {
     compile => {
-        inc => {
-            libs                 => [ 'foo/bar' 'my-custom-lib' ],
-            replace_default_libs => 1,
-        },
+      inc => {
+        libs                 => [ 'foo/bar' 'my-custom-lib' ],
+        replace_default_libs => 1,
+      },
     },
       ...
   };

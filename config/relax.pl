@@ -2,6 +2,7 @@ use strict;
 use warnings;
 
 my $filename = $ENV{PERL_SYNTAX_CHECK_FILENAME} || "";
+my $root = $ENV{PERL_SYNTAX_CHECK_ROOT} || "";
 
 my $config = {
     compile => {

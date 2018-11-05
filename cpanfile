@@ -6,4 +6,5 @@ on test => sub {
     requires 'Test::Differences';
     requires 'Test::Fatal';
     requires 'Test::More';
+    requires 'File::pushd';
 };
