@@ -1,9 +1,8 @@
 language: perl
-sudo: false
 perl:
   - '5.8'
   - '5.10'
   - '5.16'
-  - '5.26'
+  - '5.30'
 script:
   - prove -l t
