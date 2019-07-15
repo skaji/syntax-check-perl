@@ -227,6 +227,12 @@ subtest default_libs => sub {
     like $inc->[4], qr{/local/lib/perl5$};
 };
 
+subtest not_perl_shebang => sub {
+    my @err = Checker->new->_run("t/file/not_perl_shebang", "t/file/not_perl_shebang");
+    is @err, 0;
+    diag explain $_ for @err;
+};
+
 sub _get_children {
     my $paths = shift;
 

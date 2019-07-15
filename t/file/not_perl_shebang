@@ -1,0 +1,7 @@
+#!/bin/sh
+exec perl -x "$0" "$@"
+#!perl
+use strict;
+use warnings;
+
+# vim: filetype=perl

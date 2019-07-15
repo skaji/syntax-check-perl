@@ -13,7 +13,7 @@ sub new {
 sub check {
     my ($self, $filename, $tempfile, $lines) = @_;
 
-    my @cmd = (@{$self->_cmd}, $tempfile);
+    my @cmd = (@{$self->_cmd($lines->[0])}, $tempfile);
     my $pid = open my $fh, "-|";
     if ($pid == 0) {
         open STDERR, ">&", \*STDOUT;
@@ -37,6 +37,8 @@ sub check {
 
 sub _cmd {
     my $self = shift;
+    my $first_line = shift || "";
+    my @x = $first_line =~ /^#!/ && $first_line !~ /perl\s*$/ ? ("-x") : ();
     my $inc = $self->_inc;
     my @use_module;
     if (my @module = @{$self->{use_module} || []}) {
@@ -53,6 +55,7 @@ sub _cmd {
         "-MMarkWarnings",
         @use_module,
         "-Mwarnings",
+        @x,
         "-c",
     );
 
