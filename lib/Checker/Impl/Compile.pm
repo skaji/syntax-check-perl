@@ -70,7 +70,19 @@ sub _inc {
     return \@inc if $self->{inc}{replace_default_libs};
 
     my $root = $self->{root};
-    push @inc, "$root/lib" if -d "$root/lib";
+
+    my $blib;
+    if (-d "$root/blib/arch/auto") {
+        if (opendir my ($dh), "$root/blib/arch/auto") {
+            if (!!grep { $_ ne "." && $_ ne ".." } readdir $dh) {
+                push @inc, "$root/blib/arch";
+                push @inc, "$root/blib/lib";
+                $blib++;
+            }
+            closedir $dh;
+        }
+    }
+    push @inc, "$root/lib" if !$blib && -d "$root/lib";
     push @inc, "$root/t/lib" if -d "$root/t/lib";
     push @inc, "$root/xt/lib" if -d "$root/xt/lib";
     push @inc, "$root/local/lib/perl5" if -d "$root/local/lib/perl5/$Config{version}";
