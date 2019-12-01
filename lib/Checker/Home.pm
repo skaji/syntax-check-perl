@@ -5,10 +5,8 @@ use Cwd ();
 use File::Basename ();
 use File::Spec;
 
-my $HOME;
+my $HOME = Cwd::abs_path( File::Spec->catdir(File::Basename::dirname(__FILE__), "..", "..") );
 
-sub get {
-    $HOME ||= Cwd::abs_path( File::Spec->catdir(File::Basename::dirname(__FILE__), "..", "..") );
-}
+sub get { $HOME }
 
 1;
