@@ -5,6 +5,6 @@ on test => sub {
     requires 'Capture::Tiny';
     requires 'Test::Differences';
     requires 'Test::Fatal';
-    requires 'Test::More';
+    requires 'Test::More', '0.98';
     requires 'File::pushd';
 };
