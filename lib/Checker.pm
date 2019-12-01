@@ -5,6 +5,7 @@ use Cwd ();
 use File::Basename ();
 use File::Spec;
 use Getopt::Long qw(:config no_auto_abbrev no_ignore_case bundling);
+use Checker::Home;
 
 sub _slurp {
     my $file = shift;
@@ -55,15 +56,19 @@ sub _root {
 
 sub _load_impl {
     my $class = shift;
-    my $dir = File::Spec->catdir(File::Basename::dirname(__FILE__), "Checker", "Impl");
+    my $home = Checker::Home->get;
+    my $dir = File::Spec->catdir($home, "lib", "Checker", "Impl");
     opendir my $dh, $dir or die "$dir: $!";
     my @impl = map  { "Checker::Impl::$_" }
                grep { s/\.pm$// }
                grep { -f File::Spec->catfile($dir, $_) }
                readdir $dh;
     closedir $dh;
-    for my $impl (@impl) {
-        eval "require $impl; 1" or die $@;
+    {
+        local @INC = ("$home/lib", @INC);
+        for my $impl (@impl) {
+            eval "require $impl; 1" or die $@;
+        }
     }
     @impl;
 }
