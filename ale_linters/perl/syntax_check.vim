@@ -68,8 +68,8 @@ endfunction
 
 call ale#linter#Define('perl', {
 \   'name': 'syntax-check',
-\   'executable_callback': 'ale_linters#perl#syntax_check#GetExecutable',
+\   'executable': function('ale_linters#perl#syntax_check#GetExecutable'),
 \   'output_stream': 'both',
-\   'command_callback': 'ale_linters#perl#syntax_check#GetCommand',
+\   'command': function('ale_linters#perl#syntax_check#GetCommand'),
 \   'callback': 'ale_linters#perl#syntax_check#Handle',
 \})
