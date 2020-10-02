@@ -1,10 +1,10 @@
 # Perl syntax checker [![](https://github.com/skaji/syntax-check-perl/workflows/test/badge.svg)](https://github.com/skaji/syntax-check-perl/actions)
 
-This is a Perl syntax checker, especially for [ale](https://github.com/w0rp/ale).
+This is a Perl syntax checker, especially for [ale](https://github.com/dense-analysis/ale).
 
 ## Integrate with vim-plug and ale
 
-Here is how to integrate with [vim-plug](https://github.com/junegunn/vim-plug) and [ale](https://github.com/w0rp/ale).
+Here is how to integrate with [vim-plug](https://github.com/junegunn/vim-plug) and [ale](https://github.com/dense-analysis/ale).
 
 ```vim
 call plug#begin('~/.vim/plugged')
