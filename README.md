@@ -8,7 +8,7 @@ Here is how to integrate with [vim-plug](https://github.com/junegunn/vim-plug) a
 
 ```vim
 call plug#begin('~/.vim/plugged')
-Plug 'w0rp/ale'
+Plug 'dense-analysis/ale'
 Plug 'skaji/syntax-check-perl'
 call plug#end()
 
